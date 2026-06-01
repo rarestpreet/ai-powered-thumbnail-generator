@@ -17,6 +17,6 @@ def create_tables():
 """Provide the DB session to FastAPI for use"""
 
 
-def get_Session():
+def get_session():
     with Session(engine) as session:
         yield session
