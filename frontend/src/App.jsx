@@ -19,6 +19,16 @@ function App() {
 
   const eventSourceRef = useRef(null);
 
+  const handleTestApi = async () => {
+    try {
+      const result = await apiCall.testApi();
+
+      alert("AI response: " + result.response);
+    } catch (err) {
+      alert("API failed!");
+    }
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -59,8 +69,8 @@ function App() {
     try {
       const result = await apiCall.createJob({
         prompt,
-        numThumbnails: parseInt(numThumbnails),
-        headshotUrl
+        num_thumbnails: parseInt(numThumbnails),
+        headshot_url: headshotUrl
       });
 
       if (result && result.jobId) {
@@ -85,13 +95,13 @@ function App() {
     eventSourceRef.current = await apiCall.subscribeToJob(id, {
       onThumbnailReady: (data) => {
         setThumbnails(prev => {
-          if (prev.find(t => t.thumbnailId === data.thumbnailId)) return prev;
+          if (prev.find(t => t.thumbnailId === data.thumbnail_id)) return prev;
           return [...prev, data];
         });
       },
       onThumbnailFailed: (data) => {
         setThumbnails(prev => {
-          if (prev.find(t => t.thumbnailId === data.thumbnailId)) return prev;
+          if (prev.find(t => t.thumbnailId === data.thumbnail_id)) return prev;
           return [...prev, data];
         });
       },
@@ -220,11 +230,11 @@ function App() {
                   </div>
 
                   <div className="p-4">
-                    {thumb.errorMessage ? (
-                      <div className="text-red-500 text-sm p-4 text-center bg-red-50 rounded-md">{thumb.errorMessage}</div>
+                    {thumb.error_message ? (
+                      <div className="text-red-500 text-sm p-4 text-center bg-red-50 rounded-md">{thumb.error_message}</div>
                     ) : (
                       <div className="space-y-3">
-                        <img src={thumb.imagekitUrl} alt={thumb.styleName} className="w-full h-auto rounded-md border border-gray-200 bg-gray-50" loading="lazy" />
+                        <img src={thumb.imagekit_url} alt={thumb.style_name} className="w-full h-auto rounded-md border border-gray-200 bg-gray-50" loading="lazy" />
                         {thumb.variants && Object.keys(thumb.variants).length > 0 && (
                           <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
                             <p className="font-medium mb-1">Available Variants:</p>
@@ -252,6 +262,13 @@ function App() {
           </div>
         </div>
       </div>
+      <button
+        onClick={handleTestApi}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center text-xl font-bold z-50"
+        title="Test API"
+      >
+        ⚡
+      </button>
     </div>
   );
 }

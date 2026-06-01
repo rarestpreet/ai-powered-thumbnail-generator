@@ -1,5 +1,17 @@
 import api from "../util/api";
 
+const testApi = async () => {
+    try {
+        const res = await api.get(
+            "/test"
+        )
+
+        return res.data
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 const uploadHeadshot = async (file) => {
     const form = new FormData()
     form.append("file", file)
@@ -16,13 +28,15 @@ const uploadHeadshot = async (file) => {
     }
 }
 
-const createJob = async ({ prompt, numThumbnails, headshotUrl }) => {
+const createJob = async ({ prompt, num_thumbnails, headshot_url }) => {
     try {
         const body = {
             prompt,
-            numThumbnails,
-            headshotUrl
+            num_thumbnails,
+            headshot_url
         }
+        console.log(body);
+
         const res = await api.post(
             "/job",
             body
@@ -66,6 +80,7 @@ const subscribeToJob = async (jobId, { onThumbnailReady, onThumbnailFailed, onJo
 }
 
 const apiCall = {
+    testApi,
     uploadHeadshot,
     createJob,
     subscribeToJob
