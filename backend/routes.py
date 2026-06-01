@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from services.gemini_service import test
+from services.ai_service import test
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
