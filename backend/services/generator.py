@@ -4,11 +4,12 @@ import logging
 from sqlmodel import Session, select
 from database import engine
 from model import Job, Thumbnail
-from services.openai_service import generate_thumbnail
+from services.ai_service import generate_thumbnail
 from services.imagekit_service import upload_file
 
 logger = logging.getLogger(__name__)
 
+# Pre-defined visual styles that provide specific aesthetic instructions to the AI model.
 STYLES = {
     "bold_dramatic": (
         "Create a bold, dramatic YouTube thumbnail with high contrast, "
@@ -35,6 +36,12 @@ STYLE_ORDER = ["bold_dramatic", "clean_minimal", "vibrant_energetic"]
 
 
 async def generate_single_thumbnail(thumbnail_id: str, prompt: str, headshot_url: str):
+    """Process:
+    - update the status of thumbnail in generation and retrieve necessary info (style_name)
+    - generate thumbnail using OpenAI model
+    - upload thumbnail to ImageKit and retrieve the url to store it in DB and status = uploaded
+    - if generation failed due to some error, set the error message and status = failed
+    """
     with Session(engine) as session:
         thumb_info = session.get(Thumbnail, thumbnail_id)
         thumb_info.status = "generating"
@@ -45,7 +52,7 @@ async def generate_single_thumbnail(thumbnail_id: str, prompt: str, headshot_url
     style_prompt = STYLES[style_name]
 
     try:
-        image_byte = generate_thumbnail(prompt, style_prompt, headshot_url)
+        image_byte = await generate_thumbnail(prompt, style_prompt, headshot_url)
 
         with Session(engine) as session:
             thumb_info = session.get(Thumbnail, thumbnail_id)
@@ -77,6 +84,11 @@ async def generate_single_thumbnail(thumbnail_id: str, prompt: str, headshot_url
 
 
 async def process_job(job_id: str):
+    """Process:
+    - Retrieve the job (job_id) and thumbnail (associated with the job) from DB
+    - use asynchronous generation for each thumbnail to reduce overall time
+    - mark the end of job with either failed or completed
+    """
     with Session(engine) as session:
         job_info = session.get(Job, job_id)
         job_info.status = "processing"
@@ -85,6 +97,7 @@ async def process_job(job_id: str):
         session.add(job_info)
         session.commit()
 
+        print("url", headshot_url)
         thumb_info = session.exec(select(Thumbnail).where(Thumbnail.job_id == job_id))
         thumbnail_ids = [t.id for t in thumb_info]
 
